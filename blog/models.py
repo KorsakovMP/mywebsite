@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from wagtail.models import Page
+from wagtail.fields import RichTextField
+from wagtail.admin.panels import FieldPanel
+from wagtail.search import index
 
 
 class Post(models.Model):
@@ -33,3 +37,27 @@ class Comment(models.Model):
 
 def approved_comments(self):
     return self.comments.filter(approved_comment=True)
+
+class HomePage(Page):
+    intro = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel('intro')
+    ]
+
+class BlogPage(Page):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateField("Post date")
+    intro = models.CharField(max_length=250)
+    text = RichTextField(blank=True)
+
+    search_fields = Page.search_fields + [
+        index.SearchField('intro'),
+        index.SearchField('text'),
+    ]
+
+    content_panels = Page.content_panels + [
+        FieldPanel('date'),
+        FieldPanel('intro'),
+        FieldPanel('text'),
+    ]
